@@ -1,25 +1,23 @@
 {
-  "name": "phpguard",
+  "name": "php-security-guard",
   "displayName": "PHP Security Guard",
   "description": "Local-first PHP security checks for runtime versions, configuration, Composer advisories and risky source patterns.",
   "version": "0.2.0",
-  "publisher": "AnanthapadmanabhanM",
-  "icon": "images/icon.png",
+  "publisher": "community-preview",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/blitzbugg/phpguard.git"
+    "url": "https://github.com/blitzbugg/guardphp.git"
   },
   "engines": { "vscode": "^1.90.0" },
   "categories": ["Linters", "Programming Languages", "Other"],
-  "keywords": ["php", "security", "composer", "audit", "vulnerability"],
   "extensionKind": ["workspace"],
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
       "description": "In an untrusted workspace, file-content checks still run, but php and Composer are never executed."
     },
-    "virtualWorkspaces": false
+    "bWorkspaces": false
   },
   "activationEvents": [
     "workspaceContains:**/*.php",
@@ -42,14 +40,22 @@
       "explorer": [
         {
           "id": "phpSecurityGuard.findings",
-          "name": "PHP Security Guard"
+          "name": "PHP Security Guard",
+          "icon": "images/icon.svg"
+        }
+      ],
+      "activitybar": [
+        {
+          "id": "phpSecurityGuard.dashboard",
+          "name": "PHP Security Guard",
+          "icon": "images/icon.svg"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "phpSecurityGuard.findings",
-        "contents": "No findings yet.\n[Scan workspace](command:phpSecurityGuard.scanWorkspace)\nFindings need manual review; this tool cannot certify a deployment as safe."
+        "contents": "No findings yet.\\n[Scan workspace](command:phpSecurityGuard.scanWorkspace) Findings need manual review; this tool cannot certify a deployment as safe."
       }
     ],
     "menus": {
@@ -77,21 +83,17 @@
         "phpSecurityGuard.maxFiles": {
           "type": "number",
           "default": 5000,
-          "minimum": 100,
-          "maximum": 50000,
           "description": "Maximum number of matching files to analyse in one scan."
         },
         "phpSecurityGuard.maxFileBytes": {
           "type": "number",
           "default": 1048576,
-          "minimum": 65536,
-          "maximum": 16777216,
           "description": "Files larger than this are skipped and reported, so a huge file cannot exhaust the extension host."
         },
-        "phpSecurityGuard.includeVendor": {
+        "phpSecurityGuard.include": {
           "type": "boolean",
           "default": false,
-          "description": "Also analyse the vendor directory. Dependency auditing is usually a better tool for vendor code."
+          "description": "Also analyse the vendor directory. Composer auditing is usually a better tool for vendor code."
         },
         "phpSecurityGuard.phpPath": {
           "type": "string",
@@ -116,7 +118,7 @@
     "watch": "tsc -watch -p ./",
     "check": "tsc --noEmit -p ./",
     "test": "tsc -p tsconfig.test.json && node --test \"out-test/**/*.test.js\"",
-    "vscode:prepublish": "npm run compile"
+    "vscode:pre": "npm run compile"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

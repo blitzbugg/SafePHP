@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="shield" x1="23" y1="16" x2="103" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22E6E8"/>
+      <stop offset="1" stop-color="#1677FF"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="75" y1="72" x2="112" y2="111" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#24E8E8"/>
+      <stop offset="1" stop-color="#1684FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="25" fill="#07152F"/>
+  <path d="M64 12 105 27v32c0 27-17 45-41 57C40 104 23 86 23 59V27L64 12Z" fill="#0D2853" stroke="url(#shield)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M38 39h52" stroke="#22DCE8" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+  <text x="64" y="54" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" letter-spacing="-1.2" fill="#FFFFFF">PHP</text>
+  <path d="m47 65-10 8 10 8M81 65l10 8-10 8M69 62l-9 23" stroke="#25DDEB" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="83" cy="82" r="14" fill="#07152F" stroke="url(#glass)" stroke-width="5"/>
+  <path d="m93 92 12 12" stroke="url(#glass)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M77 76a8 8 0 0 1 6-3" stroke="#FFFFFF" stroke-opacity=".8" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
