@@ -1,19 +1,40 @@
 {
   "name": "php-security-guard",
   "displayName": "PHP Security Guard",
-  "description": "Local-first PHP security checks for runtime exposure, Composer advisories, and risky source patterns.",
-  "version": "0.1.0",
+  "description": "Local-first PHP security checks for runtime versions, configuration, Composer advisories and risky source patterns.",
+  "version": "0.2.0",
   "publisher": "community-preview",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blitzbugg/guardphp.git"
+  },
   "engines": { "vscode": "^1.90.0" },
   "categories": ["Linters", "Programming Languages", "Other"],
-  "activationEvents": ["workspaceContains:**/*.php", "onCommand:phpSecurityGuard.scanWorkspace"],
+  "keywords": ["php", "security", "composer", "audit", "vulnerability"],
+  "extensionKind": ["workspace"],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In an untrusted workspace, file-content checks still run, but php and Composer are never executed."
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [
+    "workspaceContains:**/*.php",
+    "onView:phpSecurityGuard.findings",
+    "onCommand:phpSecurityGuard.scanWorkspace"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "phpSecurityGuard.scanWorkspace",
         "title": "PHP Security Guard: Scan Workspace"
+      },
+      {
+        "command": "phpSecurityGuard.showReport",
+        "title": "PHP Security Guard: Show Last Report"
       }
     ],
     "views": {
@@ -24,39 +45,81 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "phpSecurityGuard.findings",
+        "contents": "No findings yet.\n[Scan workspace](command:phpSecurityGuard.scanWorkspace)\nFindings need manual review; this tool cannot certify a deployment as safe."
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "phpSecurityGuard.scanWorkspace",
+          "when": "view == phpSecurityGuard.findings",
+          "group": "navigation"
+        }
+      ]
+    },
     "configuration": {
       "title": "PHP Security Guard",
       "properties": {
         "phpSecurityGuard.enableSourceHeuristics": {
           "type": "boolean",
           "default": true,
-          "description": "Enable conservative source-pattern checks. Findings require manual review."
+          "description": "Enable conservative line-based source checks. These are review candidates, not proof of a vulnerability."
         },
         "phpSecurityGuard.runComposerAudit": {
           "type": "boolean",
           "default": true,
-          "description": "Run composer audit --format=json when Composer and composer.lock are available."
+          "markdownDescription": "Run `composer audit` when Composer and a `composer.lock` are available. This contacts packagist.org and sends installed package names and versions; no source code is sent. Only runs in trusted workspaces."
         },
         "phpSecurityGuard.maxFiles": {
           "type": "number",
           "default": 5000,
           "minimum": 100,
           "maximum": 50000,
-          "description": "Maximum project files to inspect during one scan."
+          "description": "Maximum number of matching files to analyse in one scan."
+        },
+        "phpSecurityGuard.maxFileBytes": {
+          "type": "number",
+          "default": 1048576,
+          "minimum": 65536,
+          "maximum": 16777216,
+          "description": "Files larger than this are skipped and reported, so a huge file cannot exhaust the extension host."
+        },
+        "phpSecurityGuard.includeVendor": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also analyse the vendor directory. Dependency auditing is usually a better tool for vendor code."
+        },
+        "phpSecurityGuard.phpPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the `php` executable used for the version probe. Leave empty to use `php` from PATH. Only `php -v` is ever run; workspace files are never executed."
+        },
+        "phpSecurityGuard.composerPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a Composer executable. On Windows a composer.bat shim cannot be launched without a shell, so prefer composerPharPath."
+        },
+        "phpSecurityGuard.composerPharPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to composer.phar, launched through PHP. Recommended on Windows when composer is installed as a .bat shim."
         }
       }
-    },
-    "problemMatcher": []
+    }
   },
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "vscode:prepublish": "npm run compile",
-    "test": "npm run compile"
+    "check": "tsc --noEmit -p ./",
+    "test": "npm run compile",
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "1.90.0",
     "typescript": "^5.7.2"
   }
 }
