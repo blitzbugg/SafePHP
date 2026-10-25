@@ -1,13 +1,14 @@
 {
-  "name": "php-security-guard",
-  "displayName": "PHP Security Guard",
+  "name": "SafePHP",
+  "displayName": "SafePHP - PHP Security Guard",
   "description": "Local-first PHP security checks for runtime versions, configuration, Composer advisories and risky source patterns.",
-  "version": "0.2.0",
-  "publisher": "community-preview",
+  "version": "0.3.0",
+  "publisher": "AnanthapadmanabhanM",
+  "icon": "images/icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/blitzbugg/guardphp.git"
+    "url": "https://github.com/blitzbugg/SafePHP.git"
   },
   "engines": { "vscode": "^1.90.0" },
   "categories": ["Linters", "Programming Languages", "Other"],
@@ -17,12 +18,10 @@
       "supported": "limited",
       "description": "In an untrusted workspace, file-content checks still run, but php and Composer are never executed."
     },
-    "bWorkspaces": false
+    "virtualWorkspaces": false
   },
   "activationEvents": [
-    "workspaceContains:**/*.php",
-    "onView:phpSecurityGuard.findings",
-    "onCommand:phpSecurityGuard.scanWorkspace"
+    "workspaceContains:**/*.php"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -55,14 +54,14 @@
     "viewsWelcome": [
       {
         "view": "phpSecurityGuard.findings",
-        "contents": "No findings yet.\\n[Scan workspace](command:phpSecurityGuard.scanWorkspace) Findings need manual review; this tool cannot certify a deployment as safe."
+        "contents": "No findings yet.\n[Scan workspace](command:phpSecurityGuard.scanWorkspace) Findings need manual review; this tool cannot certify a deployment as safe."
       }
     ],
     "menus": {
       "view/title": [
         {
           "command": "phpSecurityGuard.scanWorkspace",
-          "when": "view == phpSecurityGuard.findings",
+          "when": "view == phpSecurityGuard.findings || view == phpSecurityGuard.dashboard",
           "group": "navigation"
         }
       ]
@@ -90,7 +89,7 @@
           "default": 1048576,
           "description": "Files larger than this are skipped and reported, so a huge file cannot exhaust the extension host."
         },
-        "phpSecurityGuard.include": {
+        "phpSecurityGuard.includeVendor": {
           "type": "boolean",
           "default": false,
           "description": "Also analyse the vendor directory. Composer auditing is usually a better tool for vendor code."
@@ -118,7 +117,7 @@
     "watch": "tsc -watch -p ./",
     "check": "tsc --noEmit -p ./",
     "test": "tsc -p tsconfig.test.json && node --test \"out-test/**/*.test.js\"",
-    "vscode:pre": "npm run compile"
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
