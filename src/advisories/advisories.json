@@ -1,62 +1,117 @@
-[
-  {
-    "id": "CVE-2026-109618",
-    "title": "PHP request cleanup memory corruption (PHP2Shell)",
-    "category": "runtime",
-    "summary": "Critical PHP core vulnerability. A project declaration alone cannot establish whether the deployed web runtime is affected.",
-    "references": [
-      "https://www.php.net/archive/2026.php#2026-10-20-1",
-      "https://cert.europa.eu/publications/security-advisories/2026-018"
-    ],
-    "fixedVersions": {
-      "8.2": "8.2.35",
-      "8.3": "8.3.36",
-      "8.4": "8.4.27",
-      "8.5": "8.5.12"
+{
+  "schemaVersion": 2,
+  "retrievedAt": "2026-10-25",
+  "advisories": [
+    {
+      "id": "CVE-2026-109618",
+      "aliases": ["GHSA-w8hw-w9fx-j79w", "php2shell"],
+      "title": "PHP core RCE via out-of-memory request cleanup",
+      "summary": "An out-of-memory condition can interrupt PHP while internal request data is only partially initialised. Request cleanup may then treat invalid data as valid, which allows unauthenticated remote code execution before any application code runs.",
+      "category": "runtime",
+      "status": "fixed",
+      "severity": "critical",
+      "branches": {
+        "8.5": { "affectedBelow": "8.5.12", "fixedIn": "8.5.12" },
+        "8.4": { "affectedBelow": "8.4.27", "fixedIn": "8.4.27" },
+        "8.3": { "affectedBelow": "8.3.36", "fixedIn": "8.3.36" },
+        "8.2": { "affectedBelow": "8.2.35", "fixedIn": "8.2.35" }
+      },
+      "eolBranchesAffected": true,
+      "preconditions": "Every PHP installation that serves web requests is at risk: PHP-FPM, Apache with mod_php, php-cgi, FrankenPHP and LiteSpeed. The PHP team considers mod_php the highest-risk setup.",
+      "mitigations": [
+        {
+          "directive": "memory_limit",
+          "value": "-1",
+          "text": "Set memory_limit=-1 in a context applications cannot override (php_admin_value in the FPM pool or Apache configuration) and check that no pool, directory or application setting restores a finite limit. This removes the controllable failure, but an underlying allocation failure can still reach the vulnerable path."
+        },
+        {
+          "directive": "post_max_size",
+          "value": "8M",
+          "text": "Set a low post_max_size: 8M for applications without file uploads, 32M where uploads are required. Keep upload_max_filesize below post_max_size."
+        }
+      ],
+      "recommendation": "Update the web-serving PHP runtime to 8.5.12, 8.4.27, 8.3.36 or 8.2.35, or to a vendor build that carries the backport, then restart and verify the running workers. Interim controls reduce exposure to specific attack paths but do not fix the bug.",
+      "references": [
+        "https://www.php.net/archive/2026.php",
+        "https://cert.europa.eu/publications/security-advisories/2026-018/",
+        "https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching",
+        "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w"
+      ],
+      "verifiedAgainst": [
+        "https://www.php.net/archive/2026.php",
+        "https://cert.europa.eu/publications/security-advisories/2026-018/",
+        "https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching"
+      ]
     },
-    "affectedBefore": {
-      "8.2": "8.2.35",
-      "8.3": "8.3.36",
-      "8.4": "8.4.27",
-      "8.5": "8.5.12"
+    {
+      "id": "CVE-2026-109619",
+      "aliases": ["GHSA-6wmf-4rv5-p3rp", "php2shell"],
+      "title": "PHP core RCE via stale request global state",
+      "summary": "Internal state owned by a request can survive after its backing memory has been freed, for example after a fatal error. A later request handled by the same worker may use that stale state before normal initialisation resets it, allowing remote code execution.",
+      "category": "runtime",
+      "status": "fixed",
+      "severity": "critical",
+      "branches": {
+        "8.5": { "affectedBelow": "8.5.12", "fixedIn": "8.5.12" },
+        "8.4": { "affectedBelow": "8.4.27", "fixedIn": "8.4.27" },
+        "8.3": { "affectedBelow": "8.3.36", "fixedIn": "8.3.36" },
+        "8.2": { "affectedBelow": "8.2.35", "fixedIn": "8.2.35" }
+      },
+      "eolBranchesAffected": true,
+      "preconditions": "Every PHP installation that serves web requests is at risk. Exploitation requires a worker to reuse state left behind by an earlier request.",
+      "mitigations": [
+        {
+          "directive": "session.upload_progress.enabled",
+          "value": "0",
+          "text": "Set session.upload_progress.enabled=0 and restart every worker. Apply it in php.ini, an FPM pool or a server configuration that takes effect before request parsing; ini_set() and FPM .user.ini are not sufficient. This blocks the confirmed session paths but not other variants."
+        },
+        {
+          "directive": "fatal_error_backtraces",
+          "value": "0",
+          "text": "On PHP 8.5, set fatal_error_backtraces=0 and restart every worker. This blocks the confirmed fatal backtrace path only."
+        }
+      ],
+      "recommendation": "Update to 8.5.12, 8.4.27, 8.3.36 or 8.2.35, or to a vendor build that carries the backport. Interim controls reduce exposure to specific attack paths but do not fix the bug.",
+      "references": [
+        "https://www.php.net/archive/2026.php",
+        "https://cert.europa.eu/publications/security-advisories/2026-018/",
+        "https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching",
+        "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp"
+      ],
+      "verifiedAgainst": [
+        "https://www.php.net/archive/2026.php",
+        "https://cert.europa.eu/publications/security-advisories/2026-018/",
+        "https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching"
+      ]
     },
-    "recommendation": "Update the actual web-serving PHP runtime to a vendor-fixed release and verify the running workers. For older branches, consult the OS/vendor advisory for backported fixes; do not infer vulnerability solely from upstream version numbers.",
-    "status": "verified"
-  },
-  {
-    "id": "CVE-2026-109619",
-    "title": "PHP stale request state (PHP2Shell)",
-    "category": "runtime",
-    "summary": "Critical PHP core vulnerability. A project declaration alone cannot establish whether the deployed web runtime is affected.",
-    "references": [
-      "https://www.php.net/archive/2026.php#2026-10-20-1",
-      "https://cert.europa.eu/publications/security-advisories/2026-018"
-    ],
-    "fixedVersions": {
-      "8.2": "8.2.35",
-      "8.3": "8.3.36",
-      "8.4": "8.4.27",
-      "8.5": "8.5.12"
-    },
-    "affectedBefore": {
-      "8.2": "8.2.35",
-      "8.3": "8.3.36",
-      "8.4": "8.4.27",
-      "8.5": "8.5.12"
-    },
-    "recommendation": "Update the actual web-serving PHP runtime to a vendor-fixed release and verify the running workers. For older branches, consult the OS/vendor advisory for backported fixes; do not infer vulnerability solely from upstream version numbers.",
-    "status": "verified"
-  },
-  {
-    "id": "CVE-2026-115560",
-    "title": "PHP session upload-progress configuration advisory",
-    "category": "configuration",
-    "summary": "The PHP advisory recommends disabling session upload progress until the next regular bugfix release. This check only reports configuration evidence; it does not prove effective web-runtime configuration.",
-    "references": [
-      "https://cert.europa.eu/publications/security-advisories/2026-018",
-      "https://www.php.net/archive/2026.php"
-    ],
-    "recommendation": "Verify session.upload_progress.enabled is disabled in configuration that takes effect before request parsing, then restart every relevant worker. Confirm the latest official advisory for release status.",
-    "status": "monitor"
-  }
-]
+    {
+      "id": "CVE-2026-115560",
+      "aliases": ["session upload progress"],
+      "title": "PHP core RCE via session upload progress",
+      "summary": "A remote code execution path in PHP session upload progress. The PHP project published an informational advisory: it requires upload progress to stay enabled together with an unusual session serialiser configuration, and PHP considers the risk unlikely. No out-of-band release was issued; the fix is expected in the next regular bugfix release.",
+      "category": "runtime",
+      "status": "unpatched-informational",
+      "severity": "high",
+      "branches": {},
+      "eolBranchesAffected": false,
+      "preconditions": "Requires session.upload_progress.enabled to be on (PHP's documented default is on) together with an unusual session serialiser configuration. PHP assesses this as an unlikely configuration in practice.",
+      "mitigations": [
+        {
+          "directive": "session.upload_progress.enabled",
+          "value": "0",
+          "text": "Set session.upload_progress.enabled=0 and restart every worker until the next regular PHP bugfix release. This is the mitigation PHP recommends for this issue."
+        }
+      ],
+      "recommendation": "Set session.upload_progress.enabled=0 in a pre-request configuration context and restart every worker. Apply the next regular PHP bugfix release when it is published, then confirm the official advisory for the final fixed version.",
+      "references": [
+        "https://cert.europa.eu/publications/security-advisories/2026-018/",
+        "https://www.php.net/manual/en/session.configuration.php",
+        "https://access.redhat.com/security/vulnerabilities/RHSB-2026-013"
+      ],
+      "verifiedAgainst": [
+        "https://cert.europa.eu/publications/security-advisories/2026-018/",
+        "https://www.php.net/manual/en/session.configuration.php"
+      ]
+    }
+  ]
+}
