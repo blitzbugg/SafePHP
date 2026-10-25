@@ -1,0 +1,62 @@
+[
+  {
+    "id": "CVE-2026-109618",
+    "title": "PHP request cleanup memory corruption (PHP2Shell)",
+    "category": "runtime",
+    "summary": "Critical PHP core vulnerability. A project declaration alone cannot establish whether the deployed web runtime is affected.",
+    "references": [
+      "https://www.php.net/archive/2026.php#2026-10-20-1",
+      "https://cert.europa.eu/publications/security-advisories/2026-018"
+    ],
+    "fixedVersions": {
+      "8.2": "8.2.35",
+      "8.3": "8.3.36",
+      "8.4": "8.4.27",
+      "8.5": "8.5.12"
+    },
+    "affectedBefore": {
+      "8.2": "8.2.35",
+      "8.3": "8.3.36",
+      "8.4": "8.4.27",
+      "8.5": "8.5.12"
+    },
+    "recommendation": "Update the actual web-serving PHP runtime to a vendor-fixed release and verify the running workers. For older branches, consult the OS/vendor advisory for backported fixes; do not infer vulnerability solely from upstream version numbers.",
+    "status": "verified"
+  },
+  {
+    "id": "CVE-2026-109619",
+    "title": "PHP stale request state (PHP2Shell)",
+    "category": "runtime",
+    "summary": "Critical PHP core vulnerability. A project declaration alone cannot establish whether the deployed web runtime is affected.",
+    "references": [
+      "https://www.php.net/archive/2026.php#2026-10-20-1",
+      "https://cert.europa.eu/publications/security-advisories/2026-018"
+    ],
+    "fixedVersions": {
+      "8.2": "8.2.35",
+      "8.3": "8.3.36",
+      "8.4": "8.4.27",
+      "8.5": "8.5.12"
+    },
+    "affectedBefore": {
+      "8.2": "8.2.35",
+      "8.3": "8.3.36",
+      "8.4": "8.4.27",
+      "8.5": "8.5.12"
+    },
+    "recommendation": "Update the actual web-serving PHP runtime to a vendor-fixed release and verify the running workers. For older branches, consult the OS/vendor advisory for backported fixes; do not infer vulnerability solely from upstream version numbers.",
+    "status": "verified"
+  },
+  {
+    "id": "CVE-2026-115560",
+    "title": "PHP session upload-progress configuration advisory",
+    "category": "configuration",
+    "summary": "The PHP advisory recommends disabling session upload progress until the next regular bugfix release. This check only reports configuration evidence; it does not prove effective web-runtime configuration.",
+    "references": [
+      "https://cert.europa.eu/publications/security-advisories/2026-018",
+      "https://www.php.net/archive/2026.php"
+    ],
+    "recommendation": "Verify session.upload_progress.enabled is disabled in configuration that takes effect before request parsing, then restart every relevant worker. Confirm the latest official advisory for release status.",
+    "status": "monitor"
+  }
+]

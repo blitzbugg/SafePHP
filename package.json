@@ -1,0 +1,62 @@
+{
+  "name": "php-security-guard",
+  "displayName": "PHP Security Guard",
+  "description": "Local-first PHP security checks for runtime exposure, Composer advisories, and risky source patterns.",
+  "version": "0.1.0",
+  "publisher": "community-preview",
+  "license": "MIT",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Linters", "Programming Languages", "Other"],
+  "activationEvents": ["workspaceContains:**/*.php", "onCommand:phpSecurityGuard.scanWorkspace"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "phpSecurityGuard.scanWorkspace",
+        "title": "PHP Security Guard: Scan Workspace"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "phpSecurityGuard.findings",
+          "name": "PHP Security Guard"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "PHP Security Guard",
+      "properties": {
+        "phpSecurityGuard.enableSourceHeuristics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable conservative source-pattern checks. Findings require manual review."
+        },
+        "phpSecurityGuard.runComposerAudit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run composer audit --format=json when Composer and composer.lock are available."
+        },
+        "phpSecurityGuard.maxFiles": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 100,
+          "maximum": 50000,
+          "description": "Maximum project files to inspect during one scan."
+        }
+      }
+    },
+    "problemMatcher": []
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile",
+    "test": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.7.2"
+  }
+}
