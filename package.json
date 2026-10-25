@@ -114,7 +114,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "check": "tsc --noEmit -p ./",
-    "test": "npm run compile",
+    "test": "tsc -p tsconfig.test.json && node --test \"out-test/**/*.test.js\"",
     "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {

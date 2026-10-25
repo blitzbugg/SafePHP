@@ -1,70 +1,144 @@
 # PHP Security Guard
 
-A local-first VS Code extension prototype for triaging PHP security issues.
+Local-first security checks for PHP projects inside VS Code. It reports what it can
+observe about PHP runtime versions, advisory-relevant configuration, Composer
+dependencies and a small set of risky source patterns — with the source of every
+observation named.
 
-## Scope
+This is a triage tool. It cannot certify that a deployment is safe.
 
-- Checks the local PHP CLI version when available.
-- Inspects common Docker/PHP configuration files for runtime and session-upload-progress clues.
-- Runs `composer audit --format=json` when enabled and a `composer.lock` exists.
-- Flags a few conservative PHP source patterns for **manual review**.
-- Presents findings in a VS Code Explorer panel and Output channel.
+## What it does
 
-## Important limitations
+| Check | What it reads | What it does **not** do |
+| --- | --- | --- |
+| PHP version observations | `php -v`, `Dockerfile` `FROM`, Compose `image:`, `composer.json` constraints | It does not prove which PHP serves production |
+| Configuration | `php.ini`, `conf.d/*.ini`, FPM `pool.d/*.conf`, `.user.ini`, Apache config | It does not prove the *effective* configuration |
+| Composer advisories | `composer audit --format=json --locked` | It does not cover PHP core vulnerabilities |
+| Source review candidates | Line-based PHP rules | It does not prove a vulnerability |
 
-This is an early prototype, not a complete SAST engine and not a guarantee that a deployment is secure.
+Every version finding carries an observation like `local-dev`, `container-declared`
+or `declared-constraint`, so a `composer.json` constraint is never presented as the
+runtime version.
 
-- A local `php -v` result may not match PHP-FPM, Apache `mod_php`, a container, or production.
-- A version declaration in a Dockerfile is not proof of the currently deployed image.
-- Linux distributions and commercial vendors may backport security fixes without changing the upstream version in the usual way. Verify vendor advisories.
-- The source-pattern checks are intentionally simple heuristics. They can miss vulnerabilities and produce false positives.
-- Composer audit checks PHP package advisories, not PHP core runtime vulnerabilities.
-- Configuration text inspection does not establish the effective configuration used before request parsing.
-- This extension does not send source code to a service, scan remote hosts, exploit targets, or modify project files.
+## Supported advisory data
 
-## Build and run
+Bundled data, retrieved **2026-10-25**:
 
-Requirements: Node.js 20+ and npm. VS Code is needed to run the extension host.
+| Branch | First fixed release |
+| --- | --- |
+| 8.2 | 8.2.35 |
+| 8.3 | 8.3.36 |
+| 8.4 | 8.4.27 |
+| 8.5 | 8.5.12 |
+
+Covered advisories:
+
+- **CVE-2026-109618** (GHSA-w8hw-w9fx-j79w) — PHP core RCE via out-of-memory request cleanup.
+- **CVE-2026-109619** (GHSA-6wmf-4rv5-p3rp) — PHP core RCE via stale request global state.
+- **CVE-2026-115560** — an additional PHP core RCE disclosed on 23 October 2026. PHP
+  published an **informational** advisory: it requires upload progress to stay enabled
+  together with an unusual session serialiser configuration, and PHP considers the risk
+  unlikely. No out-of-band fix was issued; PHP recommends disabling session upload
+  progress until the next regular bugfix release. This is **not** a configuration-only
+  advisory.
+
+PHP 8.1 and older are **affected** per the advisories. Those branches no longer receive
+upstream fixes; PHP published minimal source backports for 7.4, 8.0 and 8.1, and some
+distributions and LTS vendors provide backported packages. This tool therefore reports
+those versions as *vendor dependent* — never as safe.
+
+Sources: [PHP news archive](https://www.php.net/archive/2026.php),
+[CERT-EU 2026-018](https://cert.europa.eu/publications/security-advisories/2026-018/),
+[CISA alert 2026-10-21](https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching).
+
+## How to read a finding
+
+Each finding states:
+
+- **Severity** — potential impact if the finding is real (`critical` … `info`).
+- **Confidence** — how sure this scanner is about *this observation*.
+- **Proof** — `advisory-backed` or `heuristic only`.
+- **Observed via** — `php-cli`, `dockerfile`, `compose-image`, `ini`, `fpm-pool`,
+  `apache`, `composer-constraint` or `composer-audit`.
+- Evidence, file and line, remediation and references.
+
+Heuristic source findings are capped at `medium` severity and never appear as editor
+errors. They are review prompts, not proof.
+
+An `uncovered` verdict means the bundled data has no entry for that branch. It is
+explicitly **not** a clean bill of health.
+
+## Commands and settings
+
+- **PHP Security Guard: Scan Workspace** — also available from the view title.
+- **PHP Security Guard: Show Last Report** — reopens the output channel.
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `phpSecurityGuard.enableSourceHeuristics` | `true` | Line-based source review candidates |
+| `phpSecurityGuard.runComposerAudit` | `true` | Run `composer audit` when a lock file exists |
+| `phpSecurityGuard.maxFiles` | `5000` | Hard cap on analysed files |
+| `phpSecurityGuard.maxFileBytes` | `1048576` | Files larger than this are skipped and reported |
+| `phpSecurityGuard.includeVendor` | `false` | Analyse `vendor/` as well |
+| `phpSecurityGuard.phpPath` | `""` | Path to the `php` executable (default: PATH) |
+| `phpSecurityGuard.composerPath` | `""` | Path to a Composer executable |
+| `phpSecurityGuard.composerPharPath` | `""` | Path to `composer.phar`, launched through PHP |
+
+### Windows and Composer
+
+A `composer.bat` shim cannot be launched without a shell, and this extension never uses
+one. On Windows, set `phpSecurityGuard.composerPharPath` (or `composerPath` pointing at a
+real executable). The scan reports which candidates it tried when Composer cannot start.
+
+### Untrusted workspaces
+
+In an untrusted workspace the extension still reads files, but **never executes** `php`
+or Composer. The report lists the skipped checks.
+
+## Privacy
+
+Local and read-only. No telemetry. The one network path is `composer audit`, which asks
+packagist.org about installed packages. See [PRIVACY.md](PRIVACY.md) for the exact data
+flows.
+
+## Requirements
+
+- VS Code 1.90 or newer.
+- Node.js 22+ and npm to build from source and run the test suite (the extension
+  itself runs on VS Code's extension host).
+- PHP and Composer are optional; without them the corresponding checks are reported as
+  not run rather than silently dropped.
+
+## Development
 
 ```bash
 npm install
-npm run compile
+npm run check   # tsc --noEmit
+npm test        # compiles tests and runs node --test
+npm run compile # build to out/
 ```
 
-Open this folder in VS Code, press `F5`, then in the Extension Development Host run:
+Open the folder in VS Code and press `F5`, then run **PHP Security Guard: Scan
+Workspace** in the Extension Development Host.
 
-`PHP Security Guard: Scan Workspace`
+Advisory data lives in [src/advisories/advisories.json](src/advisories/advisories.json).
+It is validated at load time and is the only source of fixed versions; tests enforce
+schema, https-only references and README consistency.
 
-To package it locally, install `@vscode/vsce` and run `vsce package`.
+## Limitations
 
-## Initial PHP2Shell advisory data
-
-The initial data covers CVE-2026-109618 and CVE-2026-109619 using the PHP project's October 2026 fixed releases:
-
-- PHP 8.2.35
-- PHP 8.3.36
-- PHP 8.4.27
-- PHP 8.5.12
-
-This branch-based comparison is only a triage signal. For PHP 8.1 and earlier, and for vendor-maintained builds, consult the relevant vendor's security advisory. Never interpret an unknown version as safe.
-
-The advisory data also tracks CVE-2026-115560 as a configuration advisory. Confirm current official release status before relying on this rule.
-
-Primary references:
-
-- https://www.php.net/archive/2026.php#2026-10-20-1
-- https://cert.europa.eu/publications/security-advisories/2026-018
-- https://getcomposer.org/doc/03-cli.md#audit
+Read [LIMITATIONS.md](LIMITATIONS.md) before using this in an incident or an audit. In
+short: a CLI version is not the web runtime, a declared image is not the running image,
+text configuration is not the effective configuration, vendor backports are not
+adjudicated, and line-based heuristics miss cross-statement flows.
 
 ## Roadmap
 
-1. Add automated unit tests for version parsing, vendor backports and advisory-data validation.
-2. Add language-server diagnostics with exact source ranges and severity mappings.
-3. Replace source regex heuristics with integration to a maintained PHP analyzer (Psalm or PHPStan rules) and a carefully reviewed ruleset.
-4. Add a signed/versioned advisory feed with provenance and freshness metadata.
-5. Add platform-specific container and package-manager inventory checks.
-6. Add Eclipse/NetBeans adapters only after the analysis core is independently tested.
+1. Optional signed advisory feed with provenance, replacing the bundled snapshot.
+2. Extension-host integration tests via `@vscode/test-electron`.
+3. Integration with a maintained PHP analyser for data-flow checks.
 
 ## Responsible use
 
-Use only on workspaces and systems you are authorized to assess. Do not use this tool as evidence that an internet-facing server is patched. During an active incident, follow the official advisory and patch/contain the affected deployment before relying on new tooling.
+Use only on workspaces and systems you are authorised to assess. Do not treat a clean
+report as evidence that an internet-facing server is patched.
