@@ -86,7 +86,18 @@ test("packaging declares limited untrusted-workspace support", () => {
   const manifest = readJson("package.json") as {
     capabilities: { untrustedWorkspaces: { supported: string } };
     activationEvents: string[];
+    contributes: { views: Record<string, { id: string }[]>; commands: { command: string }[] };
   };
   assert.equal(manifest.capabilities.untrustedWorkspaces.supported, "limited");
-  assert.ok(manifest.activationEvents.includes("onView:phpSecurityGuard.findings"));
+  // VS Code derives onView/onCommand activation from these contribution points,
+  // so the explicit activation events are intentionally omitted.
+  const viewIds = Object.values(manifest.contributes.views)
+    .flat()
+    .map(view => view.id);
+  assert.ok(viewIds.includes("phpSecurityGuard.findings"));
+  assert.ok(viewIds.includes("phpSecurityGuard.dashboard"));
+  const commands = manifest.contributes.commands.map(entry => entry.command);
+  assert.ok(commands.includes("phpSecurityGuard.scanWorkspace"));
+  // workspaceContains cannot be derived from contributions, so it must stay.
+  assert.ok(manifest.activationEvents.includes("workspaceContains:**/*.php"));
 });
