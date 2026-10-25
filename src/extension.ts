@@ -6,6 +6,7 @@ import { nodeProcessRunner } from "./core/process";
 import { countBySeverity, formatReport, isSafeExternalUrl, sortFindings } from "./core/presentation";
 import { applyDiagnostics } from "./ui/diagnostics";
 import { FindingsProvider } from "./ui/tree";
+import { DashboardViewProvider } from "./ui/dashboard";
 
 const PHP_TIMEOUT_MS = 5000;
 const COMPOSER_TIMEOUT_MS = 30000;
@@ -32,11 +33,20 @@ export function activate(context: vscode.ExtensionContext): void {
   const diagnostics = vscode.languages.createDiagnosticCollection("phpSecurityGuard");
   const provider = new FindingsProvider();
   let lastResult: ScanResult | undefined;
+  const dashboard = new DashboardViewProvider(
+    () => {
+      void vscode.commands.executeCommand("phpSecurityGuard.scanWorkspace");
+    },
+    finding => {
+      void vscode.commands.executeCommand("phpSecurityGuard.showFinding", finding);
+    }
+  );
 
   context.subscriptions.push(
     output,
     diagnostics,
-    vscode.window.registerTreeDataProvider("phpSecurityGuard.findings", provider)
+    vscode.window.registerTreeDataProvider("phpSecurityGuard.findings", provider),
+    vscode.window.registerWebviewViewProvider(DashboardViewProvider.viewType, dashboard)
   );
 
   const runScan = async (): Promise<void> => {
@@ -62,6 +72,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const allowExecution = vscode.workspace.isTrusted;
 
+    dashboard.setScanning(true);
     output.clear();
     output.show(true);
     output.appendLine("PHP Security Guard — local workspace scan");
@@ -141,6 +152,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     provider.setFindings(aggregated.findings);
     applyDiagnostics(diagnostics, aggregated.findings);
+    dashboard.setResult(aggregated);
     output.append(formatReport(aggregated));
 
     const counts = countBySeverity(aggregated.findings);
